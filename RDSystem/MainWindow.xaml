@@ -1,0 +1,59 @@
+﻿<Window x:Class="RDSystem.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wpf="clr-namespace:GMap.NET.WindowsPresentation;assembly=GMap.NET.WindowsPresentation"
+        Title="RadarFusion Real-Time Tracker" Height="600" Width="1000">
+    <Grid>
+       
+        <!-- Map Control -->
+        <wpf:GMapControl Name="MapControl"
+                         Margin="10,10,10,200"
+                         Zoom="5"
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Stretch" />
+
+        <!-- Data Grid -->
+        <DataGrid Name="AircraftDataGrid" AutoGenerateColumns="True" 
+                  Margin="10,400,10,10" IsReadOnly="True" Height="150" />
+
+        <!-- Fetch Data Button -->
+        <Button Content="Fetch Data" HorizontalAlignment="Right" 
+                VerticalAlignment="Top" Margin="165,10" 
+                Width="100" Click="FetchDataButton_Click"/>
+
+        <!-- Combobox to select map background -->
+        <ComboBox x:Name="MapProviderComboBox" 
+                  HorizontalAlignment="Right" VerticalAlignment="Top" Width="150" 
+                  Margin="10,10,0,0" SelectionChanged="MapProviderComboBox_SelectionChanged">
+            <ComboBoxItem>OpenStreetMap</ComboBoxItem>
+            <ComboBoxItem>Google Maps</ComboBoxItem>
+            <ComboBoxItem>Satellite</ComboBoxItem>
+            <ComboBoxItem>Bing Maps</ComboBoxItem>
+        </ComboBox>
+        
+
+        <!-- Additional UI elements for controls -->
+        <!--<Button Content="Zoom In" HorizontalAlignment="Right" VerticalAlignment="Top" Width="100" 
+                Margin="0,10,10,0" Click="ZoomIn_Click"/>
+        <Button Content="Zoom Out" HorizontalAlignment="Right" VerticalAlignment="Top" Width="100" 
+                Margin="0,50,10,0" Click="ZoomOut_Click"/>-->
+
+        <!--<StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,10">
+            <Button Content="Zoom In" Width="75" Click="ZoomIn_Click"/>
+            <Button Content="Zoom Out" Width="75" Click="ZoomOut_Click"/>
+            --><!--<Button Content="Show/Hide Objects" Width="75" Click="ToggleObjects_Click"/>
+            <Button Content="Map Layers" Width="75" Click="MapLayers_Click"/>--><!--
+        </StackPanel>-->
+
+        
+        <!--<Popup x:Name="InfoPopup" Placement="Mouse" StaysOpen="False">
+            <Border Background="White" BorderBrush="Black" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Aircraft Info" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock x:Name="AircraftInfo" Text="Details here" Padding="10"/>
+                </StackPanel>
+            </Border>
+        </Popup>-->
+        
+    </Grid>
+</Window>
