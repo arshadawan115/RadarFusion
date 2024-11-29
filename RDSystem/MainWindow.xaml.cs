@@ -11,12 +11,16 @@ using System.Windows.Media;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Text;
+using System.Net.Http.Headers;
 
 namespace RDSystem
 {
     public partial class MainWindow : Window
     {
-        private const string OpenSkyApiUrl = "https://opensky-network.org/api/states/all?lamin=55.337&lamax=69.060&lomin=10.593&lomax=24.150";
+        string username = "arshadawan115"; // Replace with your OpenSky username
+        string password = "786Allah786@"; // Replace with your OpenSky password
+        private const string OpenSkyApiUrl = "https://opensky-network.org/api/states/all";
 
         //all //"https://opensky-network.org/api/states/all";
 
@@ -42,8 +46,8 @@ namespace RDSystem
             // Initialize GMap Control
             MapControl.MapProvider = GMapProviders.OpenStreetMap;
             GMaps.Instance.Mode = AccessMode.ServerOnly;
-            double latitude = 59.3293;//25.276987;
-            double longitude = 18.0686;//55.296249;
+            double latitude = 25.276987;//25.276987;
+            double longitude = 55.296249;//55.296249;
 
             MapControl.Position = new PointLatLng(latitude, longitude); // Default center position
             MapControl.MinZoom = 2;
@@ -54,7 +58,7 @@ namespace RDSystem
 
             _httpClient = new HttpClient();
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(1); // Set interval to 2 seconds
+            _timer.Interval = TimeSpan.FromSeconds(10); // Set interval to 10 seconds
             _timer.Tick += async (sender, e) => await FetchAircraftDataAsync();
 
             // Initially set the fetching state to false
@@ -70,6 +74,10 @@ namespace RDSystem
 
             try
             {
+                var byteArray = Encoding.ASCII.GetBytes($"{username}:{password}");
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
                 // Fetch real-time data from OpenSky API (replace with the actual endpoint)
                 var response = await _httpClient.GetStringAsync("https://opensky-network.org/api/states/all");
                 var aircraftData = ParseAircraftData(response); // Parse the response to get aircraft data
@@ -139,14 +147,13 @@ namespace RDSystem
                             {
                                 Points = new PointCollection
                                 {
-                                    new Point(0, 0),       // Nose of the aircraft
-                                    new Point(15, 5),      // Right wing
-                                    new Point(10, 10),     // Tail (back)
-                                    new Point(0, 5),       // Left wing
+                                   new Point(25, 15),  // Top point
+                                   new Point(15, 30),  // Bottom left point
+                                   new Point(36, 30),  // Bottom right point
                                 },
-                                Stroke = Brushes.Blue,    // Aircraft border color (blue)
+                                Stroke = Brushes.Red,    // Aircraft border color (red)
                                 Fill = Brushes.SkyBlue,   // Aircraft fill color (sky blue)
-                                StrokeThickness = 2       // Border thickness
+                                StrokeThickness = 1       // Border thickness
                             }
                         };
 
@@ -164,6 +171,10 @@ namespace RDSystem
         {
             using (HttpClient client = new HttpClient())
             {
+                var byteArray = Encoding.ASCII.GetBytes($"{username}:{password}");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
                 HttpResponseMessage response = await client.GetAsync(OpenSkyApiUrl);
                 response.EnsureSuccessStatusCode();
 
@@ -192,6 +203,8 @@ namespace RDSystem
         //
         private void UpdateAircraftMarkers(List<Aircraft> aircraftData)
         {
+            AircraftDataGrid.ItemsSource = aircraftData;
+
             // Clear existing markers before adding new ones to avoid excessive memory usage
             MapControl.Markers.Clear();
 
@@ -205,14 +218,13 @@ namespace RDSystem
                         {
                             Points = new PointCollection
                                 {
-                                    new Point(0, 0),       // Nose of the aircraft
-                                    new Point(15, 5),      // Right wing
-                                    new Point(10, 10),     // Tail (back)
-                                    new Point(0, 5),       // Left wing
+                                   new Point(25, 15),  // Top point
+                                   new Point(15, 30),  // Bottom left point
+                                   new Point(36, 30),  // Bottom right point
                                 },
-                            Stroke = Brushes.Blue,    // Aircraft border color (blue)
+                            Stroke = Brushes.Red,    // Aircraft border color (red)
                             Fill = Brushes.SkyBlue,   // Aircraft fill color (sky blue)
-                            StrokeThickness = 2       // Border thickness
+                            StrokeThickness = 1       // Border thickness
                         }
                     };
 
@@ -274,6 +286,14 @@ namespace RDSystem
             StartButton.IsEnabled = true;   // Enable the Start button
             StopButton.IsEnabled = false;  // Disable the Stop button
             _timer.Stop(); // Stop the timer from fetching data
+        }
+
+        private void ButtonClearData_Click(object sender, RoutedEventArgs e)
+        {
+            MapControl.Markers.Clear();
+            AircraftDataGrid.ItemsSource = null;
+            AircraftDataGrid.Items.Refresh();
+
         }
     }
 

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.35130.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadarFusion", "RadarFusion.csproj", "{5A196409-77AE-4A97-A5D4-B4B0418A3C3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadarFusion", "RadarFusionSystem\RadarFusion.csproj", "{5A196409-77AE-4A97-A5D4-B4B0418A3C3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RDSystem", "..\RDSystem\RDSystem.csproj", "{85A7B11C-E8C5-4142-9E39-A92047AED1EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RDSystem", "RDSystem\RDSystem.csproj", "{85A7B11C-E8C5-4142-9E39-A92047AED1EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
