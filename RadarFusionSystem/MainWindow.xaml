@@ -11,18 +11,38 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
+        
+        <!-- Combobox to select map background -->
+        <ComboBox x:Name="MapProviderComboBox" 
+                  HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" 
+                  Margin="10,100,0,0" SelectionChanged="MapProviderComboBox_SelectionChanged">
+            <ComboBoxItem>OpenStreetMap</ComboBoxItem>
+            <ComboBoxItem>Google Maps</ComboBoxItem>
+            <ComboBoxItem>Satellite</ComboBoxItem>
+            <ComboBoxItem>Bing Maps</ComboBoxItem>
+        </ComboBox>
+        
         <gmap:GMapControl x:Name="RadarMap"
                   xmlns:gmap="clr-namespace:GMap.NET.WindowsPresentation;assembly=GMap.NET.WindowsPresentation"
                   MinZoom="1"
                   MaxZoom="20"
                   Zoom="10"
                   MouseWheelZoomType="MousePositionAndCenter"/>
-       
+
         <!-- Control Buttons -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
             <Button x:Name="StartButton" Content="Start Simulation" Width="120" Margin="5" Click="StartButton_Click"/>
             <Button x:Name="StopButton" Content="Stop Simulation" Width="120" Margin="5" Click="StopButton_Click" IsEnabled="False"/>
         </StackPanel>
+       
+
+        <!-- Additional UI elements for controls -->
+        <!--<Button Content="Zoom In" HorizontalAlignment="Right" VerticalAlignment="Top" Width="100" 
+                Margin="0,10,10,0" Click="ZoomIn_Click"/>
+        <Button Content="Zoom Out" HorizontalAlignment="Right" VerticalAlignment="Top" Width="100" 
+                Margin="0,50,10,0" Click="ZoomOut_Click"/>-->
+
+        <!-- Placeholder for other system controls -->
+        <!-- Add other controls here as needed -->
     </Grid>
 </Window>
