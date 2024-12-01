@@ -13,19 +13,40 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Text;
 using System.Net.Http.Headers;
+using System.Data.SqlClient;
+using System.Diagnostics;
 
 namespace RDSystem
 {
     public partial class MainWindow : Window
     {
-        string username = "arshadawan115"; // Replace with your OpenSky username
-        string password = "786Allah786@"; // Replace with your OpenSky password
-        private const string OpenSkyApiUrl = "https://opensky-network.org/api/states/all";
+        string _username = "arshadawan115"; // Replace with your OpenSky username
+        string _password = "786Allah786@"; // Replace with your OpenSky password
+        static int _postionCount=0;
+        List<Position> _flyObjects;
+       //string OpenSkyApiUrl = "https://opensky-network.org/api/states/all?bbox=35.0,71.0,-25.0,45.0"; //EU
+
+        //string OpenSkyApiUrl = "https://opensky-network.org/api/states/all"; //world
+
+        //string baseEuUrl = "https://opensky-network.org/api/states/all";
+        //string bbox = "35.0,71.0,-25.0,45.0";
+        //string url = baseEuUrl + "bbox=" + bbox;
+
+        //private const string OpenSkyApiUrl = "https://opensky-network.org/api/states/all?lamin=55.337&lamax=69.060&lomin=10.593&lomax=24.150";
+        //    //"https://opensky-network.org/api/states/all";//"https://opensky-network.org/api/states/all?lamin=22.633&lamax=26.084&lomin=51.583&lomax=56.381";//
+
+        //string apiKey = "YOUR_API_KEY"; // Replace with your actual FlightRadar24 API key
+        //string apiUrl = "https://api.flightradar24.com/common/v1/aircraft.json"; // Example endpoint for aircraft data
+
+        //https://adsbexchange.com/api/aircrafts/";
 
         //all //"https://opensky-network.org/api/states/all";
 
-        //Sweden//https://opensky-network.org/api/states/all?lamin=55.337&lamax=69.060&lomin=10.593&lomax=24.150
-        //UAE//string url = "https://opensky-network.org/api/states/all?lamin=22.633&lamax=26.084&lomin=51.583&lomax=56.381";
+        //Sweden//
+        string OpenSkyApiUrl = "https://opensky-network.org/api/states/all?lamin=55.337&lamax=69.060&lomin=10.593&lomax=24.150";
+
+        //UAE//
+        //string OpenSkyApiUrl = "https://opensky-network.org/api/states/all?lamin=22.633&lamax=26.084&lomin=51.583&lomax=56.381";
 
         // Geographical Filtering
         //You can also use a bounding box around Sweden to get data for aircraft flying within its airspace.
@@ -44,26 +65,33 @@ namespace RDSystem
             InitializeComponent();
 
             // Initialize GMap Control
-            MapControl.MapProvider = GMapProviders.OpenStreetMap;
+            MapControl.MapProvider = GMapProviders.ArcGIS_World_Topo_Map;
             GMaps.Instance.Mode = AccessMode.ServerOnly;
-            double latitude = 25.276987;//25.276987;
-            double longitude = 55.296249;//55.296249;
+            //double latitude = 25.276987;//UAE
+            //double longitude = 55.296249;//UAE
+
+            double latitude = 60.1282;//Sweden
+            double longitude = 18.6435;
 
             MapControl.Position = new PointLatLng(latitude, longitude); // Default center position
             MapControl.MinZoom = 2;
             MapControl.MaxZoom = 18;
             MapControl.Zoom = 5;
 
-            MapProviderComboBox.SelectedIndex = 2;
+            MapProviderComboBox.SelectedIndex = 0;
 
             _httpClient = new HttpClient();
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(10); // Set interval to 10 seconds
+            _timer.Interval = TimeSpan.FromSeconds(1); // Set interval to 5 seconds
             _timer.Tick += async (sender, e) => await FetchAircraftDataAsync();
 
             // Initially set the fetching state to false
             _isFetchingData = false;
             StopButton.IsEnabled = false; // Disable Stop button initially
+
+            string connectionString = @"Server=DESKTOP-77PED1A\SQLEXPRESS;Database=RDS_DB;Trusted_Connection=True;";
+            // Fetch FlyObjects data
+            _flyObjects = ReadPositionsData(connectionString, "StockholmSelect");
 
         }
 
@@ -72,22 +100,68 @@ namespace RDSystem
             if (!_isFetchingData)
                 return;
 
+            List<Aircraft> aircraftData = new List<Aircraft>();
+
             try
             {
-                var byteArray = Encoding.ASCII.GetBytes($"{username}:{password}");
+                var byteArray = Encoding.ASCII.GetBytes($"{_username}:{_password}");
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
                 // Fetch real-time data from OpenSky API (replace with the actual endpoint)
-                var response = await _httpClient.GetStringAsync("https://opensky-network.org/api/states/all");
-                var aircraftData = ParseAircraftData(response); // Parse the response to get aircraft data
+                var response = await _httpClient.GetStringAsync(OpenSkyApiUrl);
+                aircraftData = ParseAircraftData(response); // Parse the response to get aircraft data
+                
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error fetching API data: {ex.Message}");
+            }
+
+            try
+            {
+                if (_postionCount < _flyObjects.Count)
+                {
+                    bool isUnkown = true;
+
+                    Aircraft unkown = new Aircraft(_flyObjects[_postionCount].ICAO24,
+                        _flyObjects[_postionCount].ICAO24,
+                        _flyObjects[_postionCount].Latitude,
+                        _flyObjects[_postionCount].Longitude,
+                        _flyObjects[_postionCount].Altitude,
+                        _flyObjects[_postionCount].Velocity,
+                        _flyObjects[_postionCount].Heading,
+                        isUnkown);
+
+                    aircraftData.Add(unkown);
+
+                    //UpdateAircraftMarker(_flyObjects[_postionCount]);
+                    _postionCount++;
+                }
+                else
+                {
+                    _postionCount = 0;
+
+                    bool isUnkown = true;
+
+                    Aircraft unkown = new Aircraft(_flyObjects[_postionCount].ICAO24,
+                        _flyObjects[_postionCount].ICAO24,
+                        _flyObjects[_postionCount].Latitude,
+                        _flyObjects[_postionCount].Longitude,
+                        _flyObjects[_postionCount].Altitude,
+                        _flyObjects[_postionCount].Velocity,
+                        _flyObjects[_postionCount].Heading,
+                        isUnkown);
+
+                    aircraftData.Add(unkown);
+                }
 
                 // Update markers on the map
                 UpdateAircraftMarkers(aircraftData);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                MessageBox.Show($"Error fetching data: {ex.Message}");
+                MessageBox.Show($"Error fetching IoT data: {ex.Message}");
             }
         }
 
@@ -112,7 +186,7 @@ namespace RDSystem
                         Longitude = state[5] != null ? (double?)state[5] : null,
                         Altitude = state[7] != null ? (double?)state[7] : null,
                         Velocity = state[9] != null ? (double?)state[9] : null,
-                        ICAO24 = state[0] != null ? state[0].ToString() : null
+                        ICAO24 = state[0] != null ? state[0].ToString() : null,
                     };
 
                     // Add the aircraft to the list
@@ -147,9 +221,9 @@ namespace RDSystem
                             {
                                 Points = new PointCollection
                                 {
-                                   new Point(25, 15),  // Top point
-                                   new Point(15, 30),  // Bottom left point
-                                   new Point(36, 30),  // Bottom right point
+                                   new Point(20, 10),  // Top point
+                                   new Point(10, 25),  // Bottom left point
+                                   new Point(31, 25),  // Bottom right point
                                 },
                                 Stroke = Brushes.Red,    // Aircraft border color (red)
                                 Fill = Brushes.SkyBlue,   // Aircraft fill color (sky blue)
@@ -171,7 +245,7 @@ namespace RDSystem
         {
             using (HttpClient client = new HttpClient())
             {
-                var byteArray = Encoding.ASCII.GetBytes($"{username}:{password}");
+                var byteArray = Encoding.ASCII.GetBytes($"{_username}:{_password}");
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
@@ -212,19 +286,30 @@ namespace RDSystem
             {
                 if (aircraft.Latitude != null && aircraft.Longitude != null)
                 {
+                    SolidColorBrush strokeColor = Brushes.Red;    // Aircraft border color (red)
+                    SolidColorBrush fillColor = Brushes.SkyBlue;   // Aircraft fill color (sky blue)
+                    double strokeThickness = 1;       // Border thickness
+                                                      // 
+                    if (aircraft.IsUnknown)
+                    {
+                        strokeColor = Brushes.YellowGreen;    // Aircraft border color (red)
+                        fillColor = Brushes.Black;   // Aircraft fill color (sky blue)
+                        strokeThickness = 2;
+                    }
+
                     var marker = new GMapMarker(new PointLatLng((double)aircraft.Latitude, (double)aircraft.Longitude))
                     {
                         Shape = new Polygon
                         {
                             Points = new PointCollection
                                 {
-                                   new Point(25, 15),  // Top point
-                                   new Point(15, 30),  // Bottom left point
-                                   new Point(36, 30),  // Bottom right point
+                                   new Point(20, 10),  // Top point
+                                   new Point(10, 25),  // Bottom left point
+                                   new Point(31, 25),  // Bottom right point
                                 },
-                            Stroke = Brushes.Red,    // Aircraft border color (red)
-                            Fill = Brushes.SkyBlue,   // Aircraft fill color (sky blue)
-                            StrokeThickness = 1       // Border thickness
+                            Stroke = strokeColor,    // Aircraft border color (red)
+                            Fill = fillColor,   // Aircraft fill color (sky blue)
+                            StrokeThickness = strokeThickness       // Border thickness
                         }
                     };
 
@@ -232,7 +317,29 @@ namespace RDSystem
                 }
             }
         }
-            //
+
+        private void UpdateAircraftMarker(Position flyObject)
+        {
+            var marker = new GMapMarker(new PointLatLng((double)flyObject.Latitude, (double)flyObject.Longitude))
+            {
+                Shape = new Polygon
+                {
+                    Points = new PointCollection
+                                {
+                                   new Point(20, 10),  // Top point
+                                   new Point(10, 25),  // Bottom left point
+                                   new Point(31, 25),  // Bottom right point
+                                },
+                    Stroke = Brushes.GreenYellow,    // Aircraft border color (red)
+                    Fill = Brushes.Black,   // Aircraft fill color (sky blue)
+                    StrokeThickness = 2       // Border thickness
+                }
+            };
+
+            MapControl.Markers.Add(marker);
+        }
+
+        //
 
         private void MapProviderComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
@@ -241,6 +348,9 @@ namespace RDSystem
 
             switch (mapProvider)
             {
+                case "ArcGIS World Topo Map":
+                    MapControl.MapProvider = GMapProviders.ArcGIS_World_Topo_Map;
+                    break;
                 case "OpenStreetMap":
                     MapControl.MapProvider = GMapProviders.OpenStreetMap;
                     break;
@@ -272,7 +382,7 @@ namespace RDSystem
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
+        {         
             // Start fetching data
             _isFetchingData = true;
             StartButton.IsEnabled = false;  // Disable the Start button
@@ -280,7 +390,7 @@ namespace RDSystem
             _timer.Start(); // Start the timer to fetch data periodically
         }
         private void StopButton_Click(object sender, RoutedEventArgs e)
-        {
+        {           
             // Stop fetching data
             _isFetchingData = false;
             StartButton.IsEnabled = true;   // Enable the Start button
@@ -293,7 +403,104 @@ namespace RDSystem
             MapControl.Markers.Clear();
             AircraftDataGrid.ItemsSource = null;
             AircraftDataGrid.Items.Refresh();
+            _postionCount = 0;
+        }
 
+        // Method to read Aircraft data
+        public static void ReadAircraftData(string connectionString)
+        {
+            string query = "SELECT ICAO24, Callsign, Latitude, Longitude, Altitude, Velocity, Heading FROM [dbo].[Aircraft]";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string icao24 = reader["ICAO24"].ToString();
+                            string callsign = reader["Callsign"].ToString();
+                            double latitude = reader.IsDBNull(reader.GetOrdinal("Latitude")) ? 0 : Convert.ToDouble(reader["Latitude"]);
+                            double longitude = reader.IsDBNull(reader.GetOrdinal("Longitude")) ? 0 : Convert.ToDouble(reader["Longitude"]);
+                            double altitude = reader.IsDBNull(reader.GetOrdinal("Altitude")) ? 0 : Convert.ToDouble(reader["Altitude"]);
+                            double velocity = reader.IsDBNull(reader.GetOrdinal("Velocity")) ? 0 : Convert.ToDouble(reader["Velocity"]);
+                            double heading = reader.IsDBNull(reader.GetOrdinal("Heading")) ? 0 : Convert.ToDouble(reader["Heading"]);
+
+                            Console.WriteLine($"ICAO24: {icao24}, Callsign: {callsign}, Latitude: {latitude}, Longitude: {longitude}, Altitude: {altitude}, Velocity: {velocity}, Heading: {heading}");
+                        }
+                    }
+                }
+            }
+        }
+
+        // Method to read Positions data for a specific Aircraft (given ICAO24) and return as a list
+        public static List<Position> ReadPositionsData(string connectionString, string aircraftICAO24)
+        {
+            List<Position> positions = new List<Position>();
+            string query = "SELECT PositionID, ICAO24, Latitude, Longitude, Altitude, Velocity, Heading, Timestamp FROM [dbo].[Positions]";// WHERE ICAO24 = @ICAO24";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                   //command.Parameters.AddWithValue("@ICAO24", aircraftICAO24);
+
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Position position = new Position
+                            {
+                                PositionID = reader.GetInt32(reader.GetOrdinal("PositionID")),
+                                ICAO24 = reader["ICAO24"].ToString(),
+                                Latitude = reader.IsDBNull(reader.GetOrdinal("Latitude")) ? 0 : Convert.ToDouble(reader["Latitude"]),
+                                Longitude = reader.IsDBNull(reader.GetOrdinal("Longitude")) ? 0 : Convert.ToDouble(reader["Longitude"]),
+                                Altitude = reader.IsDBNull(reader.GetOrdinal("Altitude")) ? (double?)null : Convert.ToDouble(reader["Altitude"]),
+                                Velocity = reader.IsDBNull(reader.GetOrdinal("Velocity")) ? (double?)null : Convert.ToDouble(reader["Velocity"]),
+                                Heading = reader.IsDBNull(reader.GetOrdinal("Heading")) ? (double?)null : Convert.ToDouble(reader["Heading"]),
+                                Timestamp = reader.IsDBNull(reader.GetOrdinal("Timestamp")) ? DateTime.MinValue : Convert.ToDateTime(reader["Timestamp"])
+                            };
+
+                            positions.Add(position);
+                        }
+                    }
+                }
+            }
+
+            return positions;
+        }
+
+        // Method to fetch FlyObjects data
+        public static List<FlyObject> GetFlyObjects(string connectionString)
+        {
+            var flyObjects = new List<FlyObject>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string query = "SELECT FlyObjectName, Position.STY AS Latitude, Position.STX AS Longitude, ICAO24 FROM FlyObjects";
+
+                SqlCommand command = new SqlCommand(query, connection);
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        flyObjects.Add(new FlyObject
+                        {
+                            Name = reader["FlyObjectName"].ToString(),
+                            Latitude = Convert.ToDouble(reader["Latitude"]),
+                            Longitude = Convert.ToDouble(reader["Longitude"]),
+                            ICAO24 = reader["ICAO24"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return flyObjects;
         }
     }
 
@@ -313,6 +520,45 @@ namespace RDSystem
         public double? Altitude { get; set; }
         public double? Velocity { get; set; }
         public double? Heading { get; set; }
+        public bool IsUnknown { get; set; }
+
+        public Aircraft(string iCAO24, string callsign, double? latitude, double? longitude, double? altitude, double? velocity, double? heading, bool isUnknown=false)
+        {
+            ICAO24 = iCAO24;
+            Callsign = callsign;
+            Latitude = latitude;
+            Longitude = longitude;
+            Altitude = altitude;
+            Velocity = velocity;
+            Heading = heading;
+            IsUnknown = isUnknown;
+        }
+
+        public Aircraft()
+        {
+
+        }
+    }
+
+    // FlyObject model
+    public class FlyObject
+    {
+        public string Name { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string ICAO24 { get; set; }
+    }
+
+    public class Position
+    {
+        public int PositionID { get; set; }
+        public string ICAO24 { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double? Altitude { get; set; }
+        public double? Velocity { get; set; }
+        public double? Heading { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }
 

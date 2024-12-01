@@ -2,27 +2,28 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wpf="clr-namespace:GMap.NET.WindowsPresentation;assembly=GMap.NET.WindowsPresentation"
-        Title="RadarFusion: Autonomous Air Surveillance System" Height="600" Width="1000"
+        Title="RadarFusion: Autonomous Air Surveillance System" Height="636.8" Width="1000"
         Icon="C:\WorkArshad\RadarFusion\Repo\RadarFusionSystem\RadarFusion\Images\radarfusion-icon.jpg" >
     <Grid>
 
         <!-- Map Control -->
         <wpf:GMapControl Name="MapControl"
-                         Margin="10,10,10,120"
+                         Margin="10,10,10,150"
                          Zoom="10"
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch" />
 
         <!-- Data Grid -->
         <DataGrid Name="AircraftDataGrid" AutoGenerateColumns="True" 
-                  Margin="10,0,0,10.4" IsReadOnly="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="540" Height="80" />
+                  Margin="10,0,0,10.2" IsReadOnly="True" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="540" Height="110" />
 
-       
+
 
         <!-- Combobox to select map background -->
         <ComboBox x:Name="MapProviderComboBox" 
                   HorizontalAlignment="Right" VerticalAlignment="Top" Width="131" 
                   Margin="0,10,18.6,0" SelectionChanged="MapProviderComboBox_SelectionChanged" Height="25">
+            <ComboBoxItem>ArcGIS World Topo Map</ComboBoxItem>
             <ComboBoxItem>OpenStreetMap</ComboBoxItem>
             <ComboBoxItem>Google Maps</ComboBoxItem>
             <ComboBoxItem>Satellite</ComboBoxItem>
@@ -37,7 +38,7 @@
         <!-- Fetch Data Button -->
         <Button x:Name="ButtonFetchData" Content="Fetch Air Objects" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,325,10" 
                 Width="100" Height="40" Click="FetchDataButton_Click" />
-        <Label x:Name="labelData" Content="Live Positions:" HorizontalAlignment="Left" Height="24" Margin="10,0,0,90.4" VerticalAlignment="Bottom" Width="96" RenderTransformOrigin="0.425,-0.417"/>
+        <Label x:Name="labelData" Content="Live Positions:" HorizontalAlignment="Left" Height="24" Margin="10,0,0,117.2" VerticalAlignment="Bottom" Width="96" RenderTransformOrigin="0.425,-0.417"/>
         <!-- Additional UI elements for controls -->
         <!--<Button Content="Zoom In" HorizontalAlignment="Right" VerticalAlignment="Top" Width="100" 
                 Margin="0,10,10,0" Click="ZoomIn_Click"/>
